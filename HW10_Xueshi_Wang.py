@@ -22,7 +22,7 @@ class Repository:
         self.feed_student()
         self.feed_instructor()
         self.feed_major()
-        
+
     def feed_major(self):
         """Feed data to major table"""
         try:
@@ -71,6 +71,9 @@ class Repository:
                         self.student[grade_line[0]].course_grade(grade_line[1], grade_line[2])
                     except KeyError:
                         raise KeyError("Grade file has a student ID that does not exist!")
+        #Major part: TODO
+        #    for key in self.student.keys():
+        #        self.major[self.student[key].Major]
             self.table_stu(self.student)
 
     def table_stu(self, stu):
