@@ -21,7 +21,8 @@ class Repository:
         self.major = dict()
         self.feed_student()
         self.feed_instructor()
-
+        self.feed_major()
+        
     def feed_major(self):
         """Feed data to major table"""
         try:
@@ -32,15 +33,20 @@ class Repository:
             with fp:         
                 for line in fp:
                     line = line.strip().split('\t')
-                    self.major[line[0]] = Major(line[0], line[1], line[2])
+                    if line[1] == 'R':
+                        self.major[line[0]] = Major(line[0])
+                        self.major[line[0]].add_required(line[2])
+                    elif line[1] == 'R':
+                        self.major[line[0]] = Major(line[0])
+                        self.major[line[0]].add_elective(line[2])
             self.table_maj(self.major)
     
     def table_maj(maj):
         """print table for majors"""
         maj_pt = PrettyTable(field_names=Major.columns)
         for key in maj.keys():
-            maj.add_row([maj[key].Dept, maj[key].Required,sorted(maj)])
-        print(stu_pt)
+            maj.add_row([maj[key].major, maj[key].Required, maj[key].Electives])
+        print(maj_pt)
 
     def feed_student(self):
         """Feed data to student class and print the pretty table"""
@@ -113,13 +119,19 @@ class Major:
     """Class for all the majors with dept, required courses and electives courses"""
     columns = ['Dept', 'Required', 'Electives'] #Class attributes for pretty table columns
 
-    def __init__(self, Dept, Required, Electives):
-        self.Dept = Dept
-        self.Required = Required
-        self.Electives = Electives
+    def __init__(self, major, Required, Electives):
+        """Constructor for major class"""
+        self.major = major
+        self.Required = list()
+        self.Electives = list()
 
     def add_required(self, required):
-        
+        """add required course to major"""
+        self.Required.append(required)
+    
+    def add_elective(self, elective):
+        """add elective course to major"""
+        self.Electives.append(elective)
 
     
 class Student:
