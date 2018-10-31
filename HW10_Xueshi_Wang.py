@@ -15,11 +15,32 @@ class Repository:
         self.student_path = os.path.join(dir_path, 'students.txt')
         self.instructor_path = os.path.join(dir_path, 'instructors.txt')
         self.grade_path = os.path.join(dir_path, 'grades.txt')
+        self.major_path = os.path.join(dir_path, 'majors.txt')
         self.student = dict()   # students[cwid] = Student(cwid, name, major)
         self.instructor = dict()
-        
+        self.major = dict()
         self.feed_student()
         self.feed_instructor()
+
+    def feed_major(self):
+        """Feed data to major table"""
+        try:
+            fp = open(self.major_path, 'r')
+        except FileNotFoundError:
+            raise FileNotFoundError('Error! Cannot open the majors.txt file', self.major_path)
+        else:
+            with fp:         
+                for line in fp:
+                    line = line.strip().split('\t')
+                    self.major[line[0]] = Major(line[0], line[1], line[2])
+            self.table_maj(self.major)
+    
+    def table_maj(maj):
+        """print table for majors"""
+        maj_pt = PrettyTable(field_names=Major.columns)
+        for key in maj.keys():
+            maj.add_row([maj[key].Dept, maj[key].Required,sorted(maj)])
+        print(stu_pt)
 
     def feed_student(self):
         """Feed data to student class and print the pretty table"""
@@ -88,6 +109,19 @@ class Repository:
         
         print(ins_pt)
 
+class Major:
+    """Class for all the majors with dept, required courses and electives courses"""
+    columns = ['Dept', 'Required', 'Electives'] #Class attributes for pretty table columns
+
+    def __init__(self, Dept, Required, Electives):
+        self.Dept = Dept
+        self.Required = Required
+        self.Electives = Electives
+
+    def add_required(self, required):
+        
+
+    
 class Student:
     """Class for all the student records. CWID, Name, completed courses."""
     columns = ['CWID', 'Name', 'Completed Courses'] #Class attributes for pretty table columns
