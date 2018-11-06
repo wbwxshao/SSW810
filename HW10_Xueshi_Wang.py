@@ -19,9 +19,10 @@ class Repository:
         self.student = dict()   # students[cwid] = Student(cwid, name, major)
         self.instructor = dict()
         self.major = dict()
+        self.feed_major()
         self.feed_student()
         self.feed_instructor()
-        self.feed_major()
+        
 
     def feed_major(self):
         """Feed data to major table"""
@@ -33,19 +34,24 @@ class Repository:
             with fp:         
                 for line in fp:
                     line = line.strip().split('\t')
-                    if line[1] == 'R':
+                    if line[0] in self.major.keys():                                            
+                        if line[1] == 'R':                        
+                            self.major[line[0]].add_required(line[2])
+                        elif line[1] == 'E':              
+                            self.major[line[0]].add_elective(line[2])
+                    else:
                         self.major[line[0]] = Major(line[0])
-                        self.major[line[0]].add_required(line[2])
-                    elif line[1] == 'R':
-                        self.major[line[0]] = Major(line[0])
-                        self.major[line[0]].add_elective(line[2])
+                        if line[1] == 'R':                      
+                            self.major[line[0]].add_required(line[2])
+                        elif line[1] == 'E':
+                            self.major[line[0]].add_elective(line[2])
             self.table_maj(self.major)
     
-    def table_maj(maj):
+    def table_maj(self, maj):
         """print table for majors"""
         maj_pt = PrettyTable(field_names=Major.columns)
         for key in maj.keys():
-            maj.add_row([maj[key].major, maj[key].Required, maj[key].Electives])
+            maj_pt.add_row([maj[key].major, sorted(maj[key].Required), sorted(maj[key].Electives)])
         print(maj_pt)
 
     def feed_student(self):
@@ -71,9 +77,12 @@ class Repository:
                         self.student[grade_line[0]].course_grade(grade_line[1], grade_line[2])
                     except KeyError:
                         raise KeyError("Grade file has a student ID that does not exist!")
+            
         #Major part: TODO
-        #    for key in self.student.keys():
-        #        self.major[self.student[key].Major]
+            for key in self.student.keys():
+                
+
+
             self.table_stu(self.student)
 
     def table_stu(self, stu):
@@ -121,8 +130,9 @@ class Repository:
 class Major:
     """Class for all the majors with dept, required courses and electives courses"""
     columns = ['Dept', 'Required', 'Electives'] #Class attributes for pretty table columns
+    acceptable = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C']
 
-    def __init__(self, major, Required, Electives):
+    def __init__(self, major):
         """Constructor for major class"""
         self.major = major
         self.Required = list()
@@ -135,11 +145,15 @@ class Major:
     def add_elective(self, elective):
         """add elective course to major"""
         self.Electives.append(elective)
-
+    
+    def eva_required(self, major, grade, course):
+        """calculate remaining required"""
+        
+        
     
 class Student:
     """Class for all the student records. CWID, Name, completed courses."""
-    columns = ['CWID', 'Name', 'Completed Courses'] #Class attributes for pretty table columns
+    columns = ['CWID', 'Name', 'Completed Courses', 'Remaining Required', 'Remaining Electives'] #Class attributes for pretty table columns
 
     def __init__(self, CWID, Name, Major):
         """Student will have cwid, name, major, course name and grade"""
@@ -147,6 +161,9 @@ class Student:
         self.Name = Name
         self.Major = Major
         self.grade = defaultdict(str) #Course name is the key with grade be the value
+        self.remain_required = list()
+        self.remain_electives = list()
+
     def course_grade(self, course_name, letter_grade):
         self.grade[course_name] = letter_grade
 
@@ -172,8 +189,8 @@ class instructor:
                    
 def main():
     """Run repo"""
-    path = input("Please enter the path of student, instructor and grade. (All three files must exist in the same directory): ")
-    #path = r'D:\stevens\ssw 810'
+    #path = input("Please enter the path of student, instructor and grade. (All three files must exist in the same directory): ")
+    path = r'D:\stevens\ssw 810'
     Repository(path)
 
  
