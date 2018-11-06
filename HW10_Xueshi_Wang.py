@@ -77,11 +77,12 @@ class Repository:
                         self.student[grade_line[0]].course_grade(grade_line[1], grade_line[2])
                     except KeyError:
                         raise KeyError("Grade file has a student ID that does not exist!")
-            
-        #Major part: TODO
-            for key in self.student.keys():
-                
-
+            for key in self.student:
+                self.student[key].get_classes()  #Get all the passed class to student class attribute
+                required = self.major[self.student[key].Major].Required #Get the major required course
+                elective = self.major[self.student[key].Major].Electives    #Get the major elective course
+                self.student[key].eva_required(required)    #Fill the attribute for student's remain_required
+                self.student[key].eva_electives(elective)   #Fill the attribute for student's remain_electives
 
             self.table_stu(self.student)
 
@@ -89,7 +90,8 @@ class Repository:
         """Print table for student"""
         stu_pt = PrettyTable(field_names=Student.columns)
         for key in stu.keys():
-            stu_pt.add_row([stu[key].CWID, stu[key].Name,sorted(list(stu[key].grade))])
+            
+            stu_pt.add_row([stu[key].CWID, stu[key].Name, sorted(list(stu[key].completed)), stu[key].remain_required, stu[key].remain_electives])
         print(stu_pt)
              
     def feed_instructor(self):
@@ -146,14 +148,12 @@ class Major:
         """add elective course to major"""
         self.Electives.append(elective)
     
-    def eva_required(self, major, grade, course):
-        """calculate remaining required"""
         
-        
-    
 class Student:
     """Class for all the student records. CWID, Name, completed courses."""
     columns = ['CWID', 'Name', 'Completed Courses', 'Remaining Required', 'Remaining Electives'] #Class attributes for pretty table columns
+    #columns = ['CWID', 'Name', 'Completed Courses']
+    acceptable = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C']
 
     def __init__(self, CWID, Name, Major):
         """Student will have cwid, name, major, course name and grade"""
@@ -161,11 +161,28 @@ class Student:
         self.Name = Name
         self.Major = Major
         self.grade = defaultdict(str) #Course name is the key with grade be the value
-        self.remain_required = list()
-        self.remain_electives = list()
-
+        self.remain_required = set()
+        self.remain_electives = set()
+        self.completed = set()
+        
     def course_grade(self, course_name, letter_grade):
         self.grade[course_name] = letter_grade
+
+    def get_classes(self):
+        """Get passed classes"""
+        for key in self.grade:
+            if self.grade[key] in self.acceptable:
+                self.completed.add(key)
+    
+    def eva_required(self, required):
+        """calculate remaining required"""
+        req = set(required)
+        self.remain_required = req.difference(self.completed)
+        
+    def eva_electives(self, elective):
+        """calculate remaining elective"""
+        elec = set(elective)
+        self.remain_electives = elec.difference(self.completed)
 
 class instructor:
     """Class for all the instructor records. """
@@ -221,6 +238,25 @@ class Test(unittest.TestCase):
         dict = stu.grade
         result = {"SSW 540":"A", "SSW 564":"A", "SSW 810":"A"}
         self.assertEqual(dict, result)
+
+    def test_course(self):
+        """test student course related function"""
+        stu = Student(5950, "LT", "SW")
+        stu.course_grade("SSW 540", "D")
+        stu.course_grade("SSW 564", "C-")
+        stu.course_grade("SSW 810", "A")
+        stu.course_grade("SSW 555", "B")
+        required = {"SSW 512", "SSW 156", "SSW 810"}
+        elective = {"SSW 123", "SSW 555"}
+        stu.get_classes()
+        stu.eva_required(required)
+        stu.eva_electives(elective)
+        result = {'SSW 810', 'SSW 555'}
+        remain_required = {'SSW 512', 'SSW 156'}
+        remain_electives = {"SSW 123"}
+        self.assertEqual(stu.completed, result)
+        self.assertEqual(stu.remain_required, remain_required)
+        self.assertEqual(stu.remain_electives, remain_electives)
 
 if __name__ == '__main__':
     unittest.main(exit=False, verbosity=2)
