@@ -182,7 +182,10 @@ class Student:
     def eva_electives(self, elective):
         """calculate remaining elective"""
         elec = set(elective)
-        self.remain_electives = elec.difference(self.completed)
+        if len(self.completed.intersection(elective)) > 0:
+            self.remain_electives = ("Passed")
+        else:
+            self.remain_electives = elec.difference(self.completed)
 
 class instructor:
     """Class for all the instructor records. """
